@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国拍</title>
+	<script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/main.css" />
+	<style type="text/css">
+    .tab-content{
+        width: 70%;
+    }
+    table{
+        width: 100%;
+    }
+    table caption{
+        font-size: 30px;
+        margin:15px;
+    }
+    div.file{
+        display: none;
+    }
+    div.active{
+        display: block;
+    }
+	</style>
+</head>
+<body>
+    <div class="banner">
+		<p class="">流量记录系统</p>
+	</div>
+    <div class="tab-container">
+        <ul class="nav nav-pills nav-stacked">
+            <li><a href="/device">设备信息</a></li>
+            <li><a href="/capture">抓包系统</a></li>
+            <li class="active"><a href="#">文件管理</a></li>
+            <li><a href="/filter">数据包提取</a></li>
+            <li><a href="/analysefile">文件分析</a></li>
+            <li><a href="/log">日志</a></li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#remote" data-toggle="tab">抓包服务器</a></li>
+                <li><a href="#local" data-toggle="tab">存储服务器端</a></li>
+            </ul>
+            <div class="tab-pane active" id="remote">
+            <% if(filesR){ 
+            	var count=Math.ceil(filesR.length/10);
+				for(var i=0;i<count;i++){%>
+        <div id="R<%=i%>" class='file'>
+            <table class="table table-bordered table-striped">
+                <caption>抓包服务器文件汇总</caption>
+                <thead>
+                    <tr>
+                        <td>文件名</td>
+                        <td>目的主机</td>
+                        <td>文件路径</td>
+                        <td>文件大小(单位：MB)</td>
+                        <td>更新时间</td>
+                        <td>操作</td>
+                    </tr>
+                </thead>
+                <tbody>
+<!--                 数组的范围要预判，循环后面后超出范围 -->
+                    <% var length= filesR.length-i*10>10?10:filesR.length-i*10;
+                    for(var j=0;j<length;j++){%>
+                        <tr id="<%=filesR[i*10+j].name%>">
+                            <td><%=filesR[i*10+j].name%></td>
+                            <td><%=filesR[i*10+j].ip%></td>
+                            <td><%=filesR[i*10+j].path%></td>
+                            <td><%=filesR[i*10+j].size%></td>
+                            <td><%=filesR[i*10+j].ctime%></td>
+                            <td><button type="button" class="btn btn-danger">删除</button>
+                            <button type="button" class="btn btn-primary" disabled>上传</button></td>
+                        </tr>
+                    <%}%>
+                </tbody>
+            </table>
+        </div>
+        <%}%>
+        <ul class="pager">
+            <% for(var i=0;i<count;i++){%>
+                <li><a href='#'><%=i+1%></a></li>
+            <%}%>
+        </ul>
+        <% }else{%>
+        <h2>连接失败</h2>
+        <%}%>
+            </div>
+
+
+        <div class="tab-pane" id="local">
+        <% if(filesL){ 
+        	var count=Math.ceil(filesL.length/10);
+        	for(var i=0;i<count;i++){%>
+        <div id="L<%=i%>" class='file'>
+            <table class="table table-bordered table-striped">
+                <caption>存储服务器端文件汇总</caption>
+                <thead>
+                    <tr>
+                        <td>文件名</td>
+                        <td>目的主机</td>
+                        <td>文件路径</td>
+                        <td>文件大小(单位：MB)</td>
+                        <td>更新时间</td>
+                        <td>操作</td>
+                    </tr>
+                </thead>
+                <tbody>
+<!--                 数组的范围要预判，循环后面后超出范围 -->
+                    <% var length2= filesL.length-i*10>10?10:filesL.length-i*10;
+                        for(var j=0;j<length2;j++){%>
+                        <tr id="<%=filesL[i*10+j].name%>">
+                            <td><%=filesL[i*10+j].name%></td>
+                            <td><%=filesL[i*10+j].ip%></td>
+                            <td><%=filesL[i*10+j].path%></td>
+                            <td><%=filesL[i*10+j].size%></td>
+                            <td><%=filesL[i*10+j].ctime%></td>
+                            <td><button type="button" class="btn btn-danger">删除</button></td>
+                        </tr>
+                    <%}%>
+                </tbody>
+            </table>
+        </div>
+        <%}%>
+        <ul class="pager">
+            <% for(var i=0;i<count;i++){%>
+                <li><a href='#'><%=i+1%></a></li>
+            <%}%>
+        </ul>
+        <% }else{%>
+        <h2>连接失败</h2>
+        <%}%>
+            </div>
+    </div>
+    <script type="text/javascript">
+    $('#L0')[0].className='file active';
+    $('#R0')[0].className='file active';
+    var files1=[];
+    var files2=[];
+    var filesR=$('#remote .file table tbody tr');
+    for(var i=0;i<filesR.length;i++){
+        files1[i]=filesR[i].id;
+    }
+    var filesL=$('#local .file table tbody tr');
+    for(var i=0;i<filesL.length;i++){
+        files2[i]=filesL[i].id;
+    }
+    var number=[];
+    for(var i=0;i<files1.length;i++){
+        if(!(files2.some(function(elem,index,arr){
+            return elem==files1[i];
+        }))){
+            number.push(i);
+        }
+    }
+    //服务器端没有的文件可以上传
+    // for(var i=0;i<number.length;i++){
+    //     filesR[number[i]].lastElementChild.lastElementChild.removeAttribute('disabled');
+    // }
+    var capture=`<%=captureStatus%>`;
+    if(capture!='stop'){
+        $('tr button:nth-child(1)').attr('disabled',true);
+    }
+    $('tr button:nth-child(1)').click(function(event){
+        var targetFile=event.target.parentNode.parentNode;
+        var file=targetFile.id;
+        var deletefile=confirm("确认永久删除抓包文件"+file+"?");
+        if(deletefile){
+            
+            $.ajax({
+                url:"/fileDelete",
+                data:{
+                    file:targetFile.id,
+                    ip:targetFile.children[1].textContent,
+                    path:targetFile.children[2].textContent//删除的文件路径
+                },
+                success:function(data){
+                    if(data==true){
+                        targetFile.parentNode.removeChild(targetFile);
+                        alert('删除成功');
+                    }else{
+                        alert('删除失败');
+                    }
+                }
+            })
+        }
+    });
+    $('tr button:nth-child(2)').click(function(event){
+        var targetFile=event.target.parentNode.parentNode;
+        $.ajax({
+            url:"/fileToServer",
+            data:{
+                filename:targetFile.id,
+                ip:targetFile.children[1].innerHTML,
+                path:targetFile.children[2].innerHTML
+            },
+            success:function(data){
+                alert('正在下载文件'+data+'至web服务端');
+            }
+        })
+    });
+    $('#remote ul.pager li').click(function(event){
+        var node=event.target;
+        var index=Number(node.textContent)-1;
+        $('#remote div.active')[0].className='file';
+        if($('#R'+index)[0].className=='file'){
+            $('#R'+index)[0].className='file active';
+        }
+    });
+    $('#local ul.pager li').click(function(event){
+        var node=event.target;
+        var index=Number(node.textContent)-1;
+        $('#local div.active')[0].className='file';
+        if($('#L'+index)[0].className=='file'){
+            $('#L'+index)[0].className='file active';
+        }
+    });
+    </script>
+    

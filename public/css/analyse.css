@@ -1,0 +1,92 @@
+    #showreport{
+        border: 1px solid #0088cc;
+        margin-top:10px;
+        width: 90%;
+        height: 700px;
+        padding: 0px 20px;
+        overflow: auto;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    #device_basicinfo input{
+        width: 100px;
+        border:none;
+        text-align: center;
+        font-weight: bold;
+    }
+    textarea{
+        width:95%;
+        height: 100px;
+    }
+    span{
+        font-weight: bold;
+        font-size: 20px;
+    }
+    .img_table{
+        width: 80%;
+        table-layout: fixed;
+    }
+    .img_table tr td{
+        text-align: left;
+        border: 1px solid black;
+    }
+    .img_table td{
+        width: 50%;
+    }
+    .img_table thead{
+        font-weight: bold;
+    }
+    .pic{
+        width: 90%;
+        margin-top:20px;
+    }
+    .word_size{
+        font-size: 19px;
+    }
+    table{
+        font-size: 19px;
+    }
+    .title1{
+        font-weight: bold;
+        font-size: 28px;
+    }
+    .title2{
+        font-weight: bold;
+        font-size: 26px;
+        margin-top: 10px;
+    }
+    .title3{
+        font-weight: bold;
+        font-size: 24px;
+    }
+    .between_distance{
+        margin-top: 50px;
+    }
+    #report_cover_title{
+        text-align:center;
+        font-weight: bold;
+        font-size: 32px;
+        margin-top: 300px;
+    }
+    #report_cover_writer{
+        text-align:center;
+        font-weight: bold;
+        font-size: 28px;
+        margin-top: 430px;
+    }
+    #report_cover_date{
+        text-align:center;
+        font-weight: bold;
+        font-size: 28px;
+        margin-top: 30px;
+}
+    #cover_export{
+        border: 1px solid #0088cc;
+        margin-top:10px;
+        width: 90%;
+        height: 700px;
+        padding: 0px 20px;
+        overflow: auto;
+        font-weight: bold;
+        font-size: 16px;
+    }

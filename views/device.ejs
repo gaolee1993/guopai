@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国拍</title>
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/main.css" />
+	<style type="text/css">
+	#device{
+		position: relative;
+	}
+    .tab-content{
+        width: 80%;
+    }
+	.info{
+		float: left;
+		margin-left:20px;
+        margin-top:20px;
+		width:40%;
+		height:40%;
+		border:1px solid grey;
+		font-size: 20px;
+		text-align: center;
+		padding-top:20px;
+	}
+	table{
+		margin-top:50px;
+	}
+    .infoNum{
+        float:right;
+        font-size: 20px;
+    }
+    .infoUsed{
+        color:black;
+    }
+	</style>
+</head>
+<body>
+    <div class="banner">
+		<p class="">流量记录系统</p>
+	</div>
+
+    <div class="tab-container">
+        <ul class="nav nav-pills nav-stacked">
+            <li class="active"><a href="#">设备信息</a></li>
+            <li><a href="/capture">抓包系统</a></li>
+            <li><a href="/pcapfile">文件管理</a></li>
+            <li><a href="/filter">数据包提取</a></li>
+            <li><a href="/analysefile">文件分析</a></li>
+            <li><a href="/log">日志</a></li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        	<% if(messages){ %>
+                <% for(var i=0;i<messages.length;i++){%>
+                <div class='info'><%=messages[i].ip%>设备信息
+                    <table class="table">
+                        <tr>
+                            <td style="width:25%">NTP时间同步</td>
+                            <td>
+                            <% if(messages[i].status){%>
+                                <span style="margin-right:10px;"><%=messages[i].status%></span>
+                            <%}%>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td style="width:25%">网卡</td>
+                            <td>
+                            <% if(messages[i].nic){%>
+                                <%for(var j=0;j<messages[i].nic.length;j++){%>
+                                <span style="margin-right:10px;"><%=messages[i].nic[j].name%></span>
+                            <%}}%>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>CPU使用率</td>
+                            <td>
+                                <div class="progress">
+                                    <div class="bar" style="width:<%=messages[i].cpu%>%;">
+                                    <span class="infoUsed"><%=messages[i].cpu%>%</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                        </tr>
+
+                        <tr>
+                            <td>磁盘利用率</td>
+                            <td title="共<%=messages[i].disk.total%>G">
+                                <div class="progress">
+                                    <div class="bar" style="width: <%=messages[i].disk.percent%>%;">
+                                    <span class="infoUsed"><%=messages[i].disk.percent%>%</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="infoNum">总:<%=messages[i].disk.total%>G</div></td>
+                        </tr>
+                        <tr>
+                            <td>内存利用率</td>
+
+                            <td title="共<%=messages[i].mem.total%>G">
+                                <div class="progress">
+                                    <div class="bar" style="width:<%=messages[i].mem.percent%>%;">
+                                    <span class="infoUsed"><%=messages[i].mem.percent%>%</span>
+                                    </div>
+                                </div>
+                                
+                            </td>
+                            <td style="width:20%"><div class="infoNum">总:<%=messages[i].mem.total%>G</div></td>
+                        </tr>
+                    </table>
+                </div>
+                <%}%>
+        	<%	}else{ %>
+				<h2>连接失败</h2>
+        	<%	} %>
+    </div>
+    <script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    $.each($('span.infoUsed'),function(index,obj){
+        if(parseFloat(obj.textContent)>= 90){
+            obj.parentNode.className+=" bar-danger";
+        }
+    })
+    </script>
+</body>
+</html>

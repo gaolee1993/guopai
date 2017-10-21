@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国拍</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="css/analyse.css">
+    <script src='js/jquery.min.js'></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+    <script src='js/highstock.js'></script>
+    <script src='js/mypic.js'></script>
+    <style type="text/css">
+    .tab-content{
+        width: 70%;
+    }
+    table{
+        width: 100%;
+    }
+    table caption{
+        font-size: 30px;
+        margin:15px;
+    }
+    .analyse{
+        display: none;
+    }
+    .active{
+        display: block;
+    }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <p class="">流量记录系统</p>
+    </div>
+    <div class="tab-container">
+        <ul class="nav nav-pills nav-stacked">
+            <li><a href="/device">设备信息</a></li>
+            <li><a href="/capture">抓包系统</a></li>
+            <li><a href="/pcapfile">文件管理</a></li>
+            <li><a href="/filter">数据包提取</a></li>
+            <li class="active"><a href="#">文件分析</a></li>
+            <li><a href="/log">日志</a></li>
+        </ul>
+    </div>
+
+    <div class="tab-content">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#analyseAll" data-toggle="tab">分析</a></li>
+            <li id='csvfile'><a href="#csv" data-toggle="tab">分析文件汇总</a></li>
+            <li id='csvfileErr'><a href="#csvErr" data-toggle="tab">错误分析文件汇总</a></li>
+            <li><a href="#report_cover" data-toggle="tab">报告封面</a></li>
+        </ul>
+        <div class="tab-pane active" id="analyseAll">           
+             <select id="selecttime">
+                <option value =""></option>
+                <%for(var i=0;i<pick_time.length;i++){%>
+                    <option value ="<%=pick_time[i]%>"><%=pick_time[i]%></option>
+                <%}%>
+            </select>
+            <select id="selectpc">
+                <option value =""></option>
+                <option value ="personal">个人</option>
+                <option value ="common">单位</option>
+            </select>
+            <div>
+                <button type="button" class="btn btn-primary">分析</button>
+                <button type="button" class="btn btn-primary">获取分析csv</button>
+                <button type="button" class="btn btn-primary">显示报告</button>
+                <button type="button" class="btn btn-primary">导出报告</button>
+            </div>
+            <div id="showreport">
+                <h1 style="text-align: center;">额度拍卖系统网络流量记录系统分析报告</h1>
+                <div id="device_basicinfo">
+                    <h2>一、设备基本信息</h2>
+                    <div class="between_distance">
+                        <h2>1.1 设备信息</h2>
+                        <p class="word_size">本次车牌拍卖网络流量抓包共有<span id="device_num"></span>台抓包设备，IP分别为<span id="device_ips"></span>。</p>
+                        <div style="display: inline-block;margin-top: 0px" class="word_size">抓包线路共有<span id="device_nic_num" ></span>个，分别为：</div>
+                        <div id="capture_lines_info" style="display: inline-block;" class="word_size"></div>
+                    </div>
+                    <div class="between_distance">
+                        <h2>1.2 抓包日期</h2>
+
+                        <p class="word_size">本次抓包日期为<span id="capture_start_date"></span>，抓包时间为<span id="capture_start_time" ></span>时到<span id="capture_stop_time"></span>时，抓包时长为<span id="capture_time" ></span>小时。</p>
+                    </div>
+                    <div class="between_distance">
+                        <h2>1.3 抓包文件大小</h2>
+                        <div id="packet_size"></div>                                         
+                    </div>
+                    <div class="between_distance">
+                        <h2>1.4 流量分析</h2>
+                        <p class="word_size">各线路合法流量记录曲线如图：</p>
+                        <div id="pic_lines" class="pic"></div>
+                        <br/><br/><br/>
+                        <p class="word_size between_distance">各线路端口流量曲线如图：</p>
+                        <div id="pic_line1" class="pic"></div><br/>
+                        <div id="pic_line2" class="pic"></div><br/>
+                        <div id="pic_line3" class="pic"></div><br/>
+                        <div id="pic_line5" class="pic"></div><br/>
+                        <br/><br/><br/>
+                        <p class="word_size between_distance">各端口流量曲线如图：</p>
+                        <div id="pic_port1" class="pic"></div><br/>
+                        <div id="pic_port2" class="pic"></div><br/>
+                        <div id="pic_port3" class="pic"></div><br/>
+                        <div id="pic_port4" class="pic"></div>            
+                    </div>
+                </div>
+                <br/><br/><br/>
+                <div id="image_analysis">
+                    <h2 class="between_distance">二、验证码分析</h2>
+                    <h2>2.1 线路综合分析</h2>                    
+                    <div id="image_req_res_total_detail">
+                        <span>线路image请求和响应次数∑情况</span>
+                        <table class="img_table">
+                            <tr>
+                                <td>image请求总次数（包括重传）</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>image实际请求总次数</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>image请求成功次数</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>image请求失败次数</td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </div><br/>
+                    <div id="image_res_err_detail">
+                        <span>线路image请求失败∑详细分类</span>
+                        <table class="img_table">
+                            <tr>
+                                <td>无响应次数</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>image响应错误总次数</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>content-type</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>status-code</td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <h2 class="between_distance">2.2 各线路分析</h2>
+                    <div id="image_req_res_every">
+                        <span>各线路image请求和响应次数</span>
+                        <table class="img_table">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td>image请求总次数（包括重传）</td>
+                                    <td>image实际请求总次数</td>
+                                    <td>image请求成功次数</td>
+                                    <td>image请求失败次数</td>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <br/><br/>
+                    <div id="pic_lines_req" class="pic"></div>
+                    <br/><br/>
+                    <div id="image_res_resend_success_failed">
+                        <span>各线路请求占比分析</span>
+                        <table class="img_table">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td>请求重发率（%）</td>
+                                    <td>请求成功率（%）</td>
+                                    <td>请求失败率（%）</td>
+                                    <td>无响应率（%）</td>
+                                    <td>content-type错误率（%）</td>
+                                    <td>status-code错误率（%）</td>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <h5>注：计算公式<br/>
+                        请求重发率 =（请求总次数-实际请求次数）/请求总次数<br/>
+                        请求成功率 = 请求成功次数 / 实际请求次数<br/>
+                        请求失败率 = 请求失败次数 / 实际请求次数<br/>
+                        无响应率 = 无响应次数 / 实际请求次数<br/>
+                        content-type错误率 = content-type错误 / 实际请求次数<br/>
+                        status-code错误率 = status-code错误 / 实际请求次数</h5><br/>
+                    </div>
+<!--                     <div id="lb_req_res" class="pic">
+                        <span>内外网对比</span>
+                        <table class="img_table">
+                            <thead>
+                                <tr>
+                                    <td colspan="2"></td>
+                                    <td>外网</td>
+                                    <td>内网</td>
+                                    <td>Δ</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="2">image请求总数（包括重传）</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">image实际请求总数</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">image响应成功总数</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr rowspan="5">
+                                    <td>image响应失败总数</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>无响应数</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>image响应错误总数</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>content-type</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>status-code</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> -->
+                </div>
+                <br/><br/><br/>
+               <h4>（人工分析见附件）</h4>
+                <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                <br/><br/>
+                <div style="float: right;margin-right: 150px;text-align:center;">
+                    <h3>复旦大学网络与信息工程中心</h3>
+                    <h3 id="report_time"></h3>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="csv">
+        </div>
+        <div class="tab-pane" id="csvErr">
+        </div>
+        <div class="tab-pane" id="report_cover">
+            <select id="cover_selectpc">
+                <option value =""></option>
+                <option value ="个人">个人</option>
+                <option value ="单位">单位</option>
+            </select>
+            <button type="button" class="btn btn-primary">显示封面</button>
+            <button type="button" class="btn btn-primary">导出封面</button>
+            <div id="cover_export">
+                <div id="report_cover_title"></div>
+                <div id="report_cover_pc"></div>
+                <div id="report_cover_writer"></div>
+                <div id="report_cover_date"></div>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    var now=new Date();
+    $('#report_time').html(now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日');
+    $('#analyseAll button:first-Child').click(function(){
+        if(!$('#selecttime').val()){
+            alert('请选择抓包时间');
+        }else{
+            $.ajax({
+                url:'/analyse',
+                data:{
+                selecttime:$('#selecttime').val()
+                },
+                success:function(data){
+                    alert(data);
+                }
+            });
+        }
+    });
+    function getDetail(reg,data){
+        var sum=0;
+        if(data.img_content){
+            for(var i=0;i<data.img_content.length;i++){   
+                if(reg.test(data.img_content[i])){          
+                sum += parseInt(reg.exec(data.img_content[i])[1]);
+            }else{
+                sum +=0;
+            }
+            }
+        }
+        return sum;
+    }
+    $('#analyseAll button:nth-child(2)').click(function(){
+        if(!$('#selecttime').val()){
+            alert('请选择抓包时间');
+        }else{
+            $.ajax({
+                url:'/getCsv',
+                data:{
+                    selecttime:$('#selecttime').val()
+                },
+                success:function(data){
+                    alert(data);
+                }
+            });
+        }
+    });
+$('#analyseAll button:nth-child(3)').click(function(){ 
+    if($('#selectpc').val()){
+        var M=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+        var month=$('#selecttime').val().slice(4,6);
+        var type=($('#selectpc').val()=='common')?'单位':'个人';
+        $('#showreport h1:first-Child').html(M[parseInt(month-1)]+type+"额度拍卖系统网络流量记录系统分析报告");
+    }
+        $.ajax({
+            url:'/showreport',
+            type:'get',
+            data:{
+                personalcommon:$('#selectpc').val(),
+                selecttime:$('#selecttime').val()
+            },
+            success:function(data){
+                console.log(data);
+                if(data=="no report"){
+                    alert("没有分析文件");
+                }else{
+                    if(data.protocol_content){
+                        var protocol_content=timeTosame(data.protocol_content);
+                        renderA(protocol_content);
+                        renderB('pic_port1',protocol_content,1);//80port
+                        renderB('pic_port2',protocol_content,2);//443port
+                        renderB('pic_port3',protocol_content,3);//830port
+                        renderB('pic_port4',protocol_content,4);//8300port
+                        renderD('pic_line1',protocol_content);
+                        renderD('pic_line2',protocol_content);
+                        renderD('pic_line3',protocol_content);
+                        renderD('pic_line5',protocol_content);
+                    }
+                    if(data.img_content){
+                        if(data.img_content.length==4){
+                            renderC(data.img_content);                            
+                        }
+
+                    }
+                
+                //$('#showreport').html(data); 
+                //alert(typeof data);
+                var req_total=/IMAGE REQUEST TOTAL,(\d+)/;
+                var req_real_total=/IMAGE REQUEST REAL TOTAL,(\d+)/;
+                var req_success_total=/IMAGE REQUEST SUCCESS TOTAL,(\d+)/;
+                var req_failed_total=/IMAGE REQUEST FAILED TOTAL,(\d+)/;
+                var req_nores_total=/IMAGE NO-RESPONSE TOTAL,(\d+)/;
+                var req_res_err_total=/IMAGE RESPONSE ERROR TOTAL,(\d+)/;
+                var req_res_content_total=/IMAGE RESPONSE CONTENT-TYPE-ERROR TOTAL,(\d+)/;
+                var req_res_code_err_total=/IMAGE RESPONSE STATUS-CODE-ERROR TOTAL,(\d+)/;
+            //线路总响应情况
+                $('#image_req_res_total_detail table tr:nth-child(1) td:nth-child(2)').html(getDetail(req_total,data));
+                $('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html(getDetail(req_real_total,data));
+                $('#image_req_res_total_detail table tr:nth-child(3) td:nth-child(2)').html(getDetail(req_success_total,data));
+                $('#image_req_res_total_detail table tr:nth-child(4) td:nth-child(2)').html(getDetail(req_failed_total,data));
+            //线路错误分类
+                $('#image_res_err_detail table tr:nth-child(1) td:nth-child(2)').html(getDetail(req_nores_total,data));
+                $('#image_res_err_detail table tr:nth-child(2) td:nth-child(2)').html(getDetail(req_res_err_total,data));
+                $('#image_res_err_detail table tr:nth-child(3) td:nth-child(2)').html(getDetail(req_res_content_total,data));
+                $('#image_res_err_detail table tr:nth-child(4) td:nth-child(2)').html(getDetail(req_res_code_err_total,data));
+            
+
+                function config_file_info(){
+                    $('#device_num').html(data.config_file.ip_info.length);
+                    $('#device_ips').html('');
+                    $('#device_ips').append(function(){
+                        var output=[];
+                        for(var i=0;i<data.config_file.ip_info.length;i++){
+                            output.push(data.config_file.ip_info[i]);                            
+                        }
+                        return output.join(' , ');
+                    });
+                    $('#device_nic_num').html(data.config_file.lines_info.length);
+                    $('#capture_lines_info').html('');
+                    for(var i=0;i<data.config_file.lines_info.length;i++){
+                        $('#capture_lines_info').append('<span>'+data.config_file.lines_info[i][0]+'</span><br/>');
+                    }
+
+                    
+                    var cutindex=data.img_content[0].indexOf('MD5');
+                    var tmp=data.img_content[0].slice(1,cutindex);
+                    var newdata=tmp.split('\n');
+                    var final_arr=[];
+                    for(j=0;j<newdata.length-1;j++){
+                        final_arr.push(newdata[j].split(','));
+                    }
+                    var start_eq_index=final_arr[0].indexOf('Start time');
+                    var stop_eq_index=final_arr[0].indexOf('End time');
+                    var capture_time_eq_index=final_arr[0].indexOf('Capture duration (seconds)');
+                    var start_time=final_arr[1][start_eq_index];
+                    var stop_time=final_arr[1][stop_eq_index];
+                    var capture_time=final_arr[1][capture_time_eq_index];
+                    var start_time1=new Date(start_time*1000);
+                    var stop_time1=new Date(stop_time*1000);
+
+                    function formate(num){
+                        return num<10?'0'+num:num;
+                    }
+                    function getdate(time){
+                        var date=new Date(time);
+                        var y=date.getFullYear();
+                        var M=formate(date.getMonth()+1);
+                        var h=formate(date.getHours());
+                        var d=formate(date.getDate());
+                        var m=formate(date.getMinutes());
+                        var s=formate(date.getSeconds());
+                        return y+'年 '+M+'月 '+d+'日 '+h+':'+m+':'+s+'';
+                    }
+                    $("#capture_start_date").html(start_time1.getFullYear()+"年"+(start_time1.getMonth()+1)+"月"+start_time1.getDate()+"日");
+                    $('#capture_start_time').html((start_time1.getHours()<10?('0'+start_time1.getHours()):start_time1.getHours())+':'+(start_time1.getMinutes()<10 ? ('0'+start_time1.getMinutes()):start_time1.getMinutes())+':'+(start_time1.getSeconds()<10 ?('0'+start_time1.getSeconds()):start_time1.getSeconds()));
+                    $('#capture_stop_time').html((stop_time1.getHours()<10?('0'+stop_time1.getHours()):stop_time1.getHours())+':'+(stop_time1.getMinutes()<10 ? ('0'+stop_time1.getMinutes()):stop_time1.getMinutes())+':'+(stop_time1.getSeconds()<10 ?('0'+stop_time1.getSeconds()):stop_time1.getSeconds()));
+                    $('#capture_time').html(Math.round(capture_time/3600*100)/100);
+                    
+                }
+
+                function capture_packet_size(){
+                    $('#packet_size').html('');
+                    var packet_size=[];
+                    for(var i=0;i<data.img_content.length;i++){
+                        var line_number=data.img_content[i][0];
+                        var cutindex=data.img_content[i].indexOf('IMAGE STATISTICS');
+                        var tmp=data.img_content[i].slice(1,cutindex);
+                        var newdata=tmp.split('\n');
+                        var final_arr=[];
+                        for(j=0;j<newdata.length-1;j++){
+                            final_arr.push(newdata[j].split(','));
+                        }
+                        var eq_index=final_arr[0].indexOf('File size (bytes)');
+                        packet_size.push([line_number,final_arr[1][eq_index]]);
+                    }
+                    for(var index in packet_size){
+                        for(var i=0;i<data.config_file.lines_info.length;i++){
+                            var math_ip_reg=new RegExp(data.config_file.lines_info[i][1]);
+                            if(math_ip_reg.exec(packet_size[index][0])){
+                                $('#packet_size').append('LINE'+packet_size[index][0]+','+data.config_file.lines_info[i][2]+','+data.config_file.lines_info[i][3]+'：<span>'+packet_size[index][1]+'B<br/>');
+                            }
+                        }
+                    }
+
+                }
+
+                function every_line_req_res(){
+
+                    var every_lines={
+                        resend:[],
+                        success:[],
+                        failed:[],
+                        nores:[],
+                        content_type:[],
+                        status_code:[]
+                    };
+                    var resend=[];success=[];failed=[];nores=[];content_type=[];status_code=[];
+                     $('#image_req_res_every table tbody').html('');
+                    for(var i=0;i<data.img_content.length;i++){
+                        if(req_total.test(data.img_content[i])){
+                        var req_total_val=parseInt(req_total.exec(data.img_content[i])[1]);
+                        var req_real_total_val=parseInt(req_real_total.exec(data.img_content[i])[1]);
+                        var req_success_total_val=parseInt(req_success_total.exec(data.img_content[i])[1]);
+                        var req_failed_total_val=parseInt(req_failed_total.exec(data.img_content[i])[1]);
+                        var req_nores_val=parseInt(req_nores_total.exec(data.img_content[i])[1]);
+                        var req_res_content_val=parseInt(req_res_content_total.exec(data.img_content[i])[1]);
+                        var req_res_code_err_val=parseInt(req_res_code_err_total.exec(data.img_content[i])[1]);
+                        
+                        $('#image_req_res_every table tbody').append("<tr><td style='font-weight: bold;'>"+"线路"+data.img_content[i][0]+"</td><td>"+req_total_val+"</td><td>"+req_real_total_val+"</td><td>"+req_success_total_val+"</td><td>"+req_failed_total_val+"</td></tr>");
+
+                        resend.push((req_total_val-req_real_total_val)/req_total_val);
+                        success.push(req_success_total_val/req_real_total_val);
+                        failed.push(req_failed_total_val/req_real_total_val);
+                        nores.push(req_nores_val/req_real_total_val);
+                        content_type.push(req_res_content_val/req_real_total_val);
+                        status_code.push(req_res_code_err_val/req_real_total_val);
+                    }
+                    }
+
+                    every_lines.resend=resend;
+                    every_lines.success=success;
+                    every_lines.failed=failed;
+                    every_lines.nores=nores;
+                    every_lines.content_type=content_type;
+                    every_lines.status_code=status_code;
+                    function summary(arr){
+                        var sum=0
+                        for(var i=0;i<arr.length;i++)
+                            sum +=arr[i];
+                        return sum;
+                    }
+                    //console.log(every_lines);
+                    $('#image_res_resend_success_failed table tbody').html('');
+                    for(var i=0;i<data.img_content.length;i++){
+                        $('#image_res_resend_success_failed table tbody').append("<tr><td style='font-weight: bold;'>"+"线路"+data.img_content[i][0]+"</td><td>"+Math.round(every_lines.resend[i]*10000)/100+"</td><td>"+Math.round(every_lines.success[i]*10000)/100+"</td><td>"+Math.round(every_lines.failed[i]*10000)/100+"</td><td>"+Math.round(every_lines.nores[i]*10000)/100+"</td><td>"+Math.round(every_lines.content_type[i]*10000)/100+"</td><td>"+Math.round(every_lines.status_code[i]*10000)/100+"</td></tr>")
+                    }
+                    var resend_total=($('#image_req_res_total_detail table tr:nth-child(1) td:nth-child(2)').html()-$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html())/$('#image_req_res_total_detail table tr:nth-child(1) td:nth-child(2)').html();
+                    var success_total=$('#image_req_res_total_detail table tr:nth-child(3) td:nth-child(2)').html()/$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html();
+                    var failed_total=$('#image_req_res_total_detail table tr:nth-child(4) td:nth-child(2)').html()/$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html();
+                    var nores_total=$('#image_res_err_detail table tr:nth-child(1) td:nth-child(2)').html()/$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html();
+                    var content_type_total=$('#image_res_err_detail table tr:nth-child(3) td:nth-child(2)').html()/$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html();
+                    var status_code_total=$('#image_res_err_detail table tr:nth-child(4) td:nth-child(2)').html()/$('#image_req_res_total_detail table tr:nth-child(2) td:nth-child(2)').html();
+                    $('#image_res_resend_success_failed table').append("<tr><td style='font-weight: bold;'>"+"线路综合∑"+"</td><td>"+Math.round(resend_total*10000)/100+"</td><td>"+Math.round(success_total*10000)/100+"</td><td>"+Math.round(failed_total*10000)/100+"</td><td>"+Math.round(nores_total*10000)/100+"</td><td>"+Math.round(content_type_total*10000)/100+"</td><td>"+Math.round(status_code_total*10000)/100+"</td></tr>")
+                }
+                function lb_req_res(){
+                    var n=0;
+                    if(data.lb_content){
+                        if(data.lb_content[0][1]=='n') {       
+                            $('#lb_req_res table tbody tr:nth-child(1) td:eq(2)').html(req_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(1) td:eq(1)').html(req_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(1) td:eq(3)').html(parseInt(req_total.exec(data.lb_content[1])[1])-parseInt(req_total.exec(data.lb_content[0])[1]));
+                            
+                            $('#lb_req_res table tbody tr:nth-child(2) td:eq(2)').html(req_real_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(2) td:eq(1)').html(req_real_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(2) td:eq(3)').html(parseInt(req_real_total.exec(data.lb_content[1])[1])-parseInt(req_real_total.exec(data.lb_content[0])[1]));
+                            
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(2)').html(req_success_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(1)').html(req_success_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(3)').html(parseInt(req_success_total.exec(data.lb_content[1])[1])-parseInt(req_success_total.exec(data.lb_content[0])[1]));
+                            
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(3)').html(req_failed_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(2)').html(req_failed_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(4)').html(parseInt(req_failed_total.exec(data.lb_content[1])[1])-parseInt(req_failed_total.exec(data.lb_content[0])[1]));
+                            
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(3)').html(req_nores_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(2)').html(req_nores_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(4)').html(parseInt(req_nores_total.exec(data.lb_content[1])[1])-parseInt(req_nores_total.exec(data.lb_content[0])[1]));
+                            
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(3)').html(req_res_err_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(2)').html(req_res_err_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(4)').html(parseInt(req_res_err_total.exec(data.lb_content[1])[1])-parseInt(req_res_err_total.exec(data.lb_content[0])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(3)').html(req_res_content_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(2)').html(req_res_content_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(4)').html(parseInt(req_res_content_total.exec(data.lb_content[1])[1])-parseInt(req_res_content_total.exec(data.lb_content[0])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(3)').html(req_res_code_err_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(2)').html(req_res_code_err_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(4)').html(parseInt(req_res_code_err_total.exec(data.lb_content[1])[1])-parseInt(req_res_code_err_total.exec(data.lb_content[0])[1]));
+                        }
+                        else{
+                            $('#lb_req_res table tbody tr:nth-child(1) td:eq(1)').html(req_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(1) td:eq(2)').html(req_total.exec(data.lb_content[1])[1]);
+                             $('#lb_req_res table tbody tr:nth-child(1) td:eq(3)').html(parseInt(req_total.exec(data.lb_content[0])[1])-parseInt(req_total.exec(data.lb_content[1])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(2) td:eq(1)').html(req_real_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(2) td:eq(2)').html(req_real_total.exec(data.lb_content[1])[1]);
+                             $('#lb_req_res table tbody tr:nth-child(2) td:eq(3)').html(parseInt(req_real_total.exec(data.lb_content[0])[1])-parseInt(req_real_total.exec(data.lb_content[1])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(1)').html(req_success_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(2)').html(req_success_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(3) td:eq(3)').html(parseInt(req_success_total.exec(data.lb_content[0])[1])-parseInt(req_success_total.exec(data.lb_content[1])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(2)').html(req_failed_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(3)').html(req_failed_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(4) td:eq(4)').html(parseInt(req_failed_total.exec(data.lb_content[0])[1])-parseInt(req_failed_total.exec(data.lb_content[1])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(2)').html(req_nores_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(3)').html(req_nores_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(5) td:eq(4)').html(parseInt(req_nores_total.exec(data.lb_content[0])[1])-parseInt(req_nores_total.exec(data.lb_content[1])[1]));
+
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(2)').html(req_res_err_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(3)').html(req_res_err_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(6) td:eq(4)').html(parseInt(req_res_err_total.exec(data.lb_content[0])[1])-parseInt(req_res_err_total.exec(data.lb_content[1])[1]));
+
+
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(2)').html(req_res_content_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(3)').html(req_res_content_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(7) td:eq(4)').html(parseInt(req_res_content_total.exec(data.lb_content[0])[1])-parseInt(req_res_content_total.exec(data.lb_content[1])[1]));
+
+
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(2)').html(req_res_code_err_total.exec(data.lb_content[0])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(3)').html(req_res_code_err_total.exec(data.lb_content[1])[1]);
+                            $('#lb_req_res table tbody tr:nth-child(8) td:eq(4)').html(parseInt(req_res_code_err_total.exec(data.lb_content[0])[1])-parseInt(req_res_code_err_total.exec(data.lb_content[1])[1]));
+                        }
+                    }
+                }
+                config_file_info();
+                capture_packet_size(); 
+                every_line_req_res();
+                lb_req_res();
+            }
+            }
+        });
+    });
+
+var csv=[];
+$('#csvfile').click(function(){
+    $.ajax({
+        url:'/csvFile',
+        success:function(data){
+            csv=data;
+            renderTable1('#csv',data);
+        }
+    })
+});
+function renderTable1(id,arr){
+    $(id).html('<input style="margin-top:7px;" type="text" placeholder="查找"/><button id="search" style="margin-left:20px;" class="btn btn-primary">查找</button>');
+    $(id).append($('<table class="table table-bordered table-striped"></table>').append($('<thead></thead>')));
+    $(id+' thead').html('<tr><td>文件名</td><td>操作</td></tr>');
+    $(id+' table').append($('<tbody></tbody>'));
+    for(var i=0;i<arr.length;i++){
+        var tr=$('<tr></tr>').html('<td>'+arr[i]+'</td><td><a href="'+arr[i]+'" class="btn btn-primary">导出</a>    <button class="btn btn-danger">删除</button></td>');
+        $(id+' tbody').append(tr);
+    }
+    $('#csv tr button:nth-child(2)').click(function(event){
+        var targetFile=event.target.parentNode.parentNode;
+        var filename=targetFile.children[0].textContent;
+        var deletefile=confirm("确认永久删除抓包文件"+filename+"?");
+        if(deletefile){
+            $.ajax({
+                url:'/fileDeleteCsv',
+                data:{
+                    filename:filename
+                },
+                success:function(data){
+                    if(data==true){
+                        targetFile.parentNode.removeChild(targetFile);
+                        alert('删除成功');
+                    }else{
+                        alert('删除失败');
+                    }
+                }
+            });
+        }
+    });
+    $(id+' #search').click(function(){
+        var searched=[];
+        for(var i=0;i<csv.length;i++){
+            if(csv[i].indexOf($('#csv input').val())!=-1){
+                searched.push(csv[i]);
+            }
+        }
+        renderTable1('#csv',searched);
+    });
+}
+var csvErr=[];
+$('#csvfileErr').click(function(){
+    $.ajax({
+        url:'/csvFileErr',
+        success:function(data){
+            csvErr=data;
+            renderTable2('#csvErr',data);
+        }
+    })
+});
+function renderTable2(id,arr){
+    $(id).html('<input style="margin-top:7px;" type="text" placeholder="查找"/><button id="search" style="margin-left:20px;" class="btn btn-primary">查找</button>');
+    $(id).append($('<table class="table table-bordered table-striped"></table>').append($('<thead></thead>')));
+    $(id+' thead').html('<tr><td>文件名</td><td>操作</td></tr>');
+    $(id+' table').append($('<tbody></tbody>'));
+    for(var i=0;i<arr.length;i++){
+        var tr=$('<tr></tr>').html('<td>'+arr[i]+'</td><td><a href="'+arr[i]+'" class="btn btn-primary">导出</a>    <button class="btn btn-danger">删除</button></td>');
+        $(id+' tbody').append(tr);
+    }
+    $('#csvErr tr button:nth-child(2)').click(function(event){
+        var targetFile=event.target.parentNode.parentNode;
+        var filename=targetFile.children[0].textContent;
+        var deletefile=confirm("确认永久删除抓包文件"+filename+"?");
+        if(deletefile){
+            $.ajax({
+                url:'/fileDeleteCsv',
+                data:{
+                    filename:filename
+                },
+                success:function(data){
+                    if(data==true){
+                        targetFile.parentNode.removeChild(targetFile);
+                        alert('删除成功');
+                    }else{
+                        alert('删除失败');
+                    }
+                }
+            });
+        }
+    });
+    $(id+' #search').click(function(){
+        var searched=[];
+        for(var i=0;i<csvErr.length;i++){
+            if(csvErr[i].indexOf($('#csvErr input').val())!=-1){
+                searched.push(csvErr[i]);
+            }
+        }
+        renderTable2('#csvErr',searched);
+    });
+}
+
+   $('#analyseAll button:nth-child(4)').click(function(){
+        $.ajax({
+            url:'export',
+            type:'post',
+            data:{
+                personalcommon:$('#selectpc').val(),
+                selecttime:$('#selecttime').val(),
+                content:$('#showreport').html()
+            },
+            success:function(data){
+                alert('public/'+data);
+                window.open(data);
+            }
+        });
+    });
+   $('#report_cover button:nth-of-type(1)').click(function(){
+        $('#report_cover_title').html(function(){
+            var now=new Date();
+            var month=parseInt(now.getMonth())+1;
+            var pc=$('#cover_selectpc').val();
+            return month+"月"+pc+"额度拍卖系统网络流量记录分析报告";
+        });
+        $('#report_cover_writer').html(function(){
+            return "复旦大学网络与信息工程中心";
+        });
+        $('#report_cover_date').html(function(){
+            var now=new Date();
+            var year=now.getFullYear();
+            var month=parseInt(now.getMonth())+1;
+            var date=now.getDate();
+            return year+"年"+month+"月"+date+"日";
+        });
+    });
+    $('#report_cover button:nth-of-type(2)').click(function(){
+        $.ajax({
+            url:'/cover_export',
+            type:'post',
+            data:{
+                type:$('#cover_selectpc').val(),
+                content:$('#cover_export').html()
+            },
+            success:function(data){
+                alert('public/'+data);
+                window.open(data);
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国拍</title>
+    <script src="js/jquery.min.js" type="text/javascript"></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <style type="text/css">
+    .tab-content{
+        width: 70%;
+    }
+    .file{
+        display: none;
+    }
+    .active{
+        display: block;
+    }
+    .choose{
+    	width: 70%;
+    }
+    .choose span{
+    	float: left;
+    	width:60px;
+    	text-align: right;
+    }
+    #filterpcapdiv{
+    	margin-top: 50px;
+    }
+    #filter{
+    	margin-left: 200px;
+    }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <p class="">流量记录系统</p>
+    </div>
+    <div class="tab-container">
+        <ul class="nav nav-pills nav-stacked">
+            <li><a href="/device">设备信息</a></li>
+            <li><a href="/capture">抓包系统</a></li>
+            <li><a href="/pcapfile">文件管理</a></li>
+            <li class="active"><a href="#">数据包提取</a></li>
+            <li><a href="/analysefile">文件分析</a></li>
+            <li><a href="/log">日志</a></li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#filterdiv" data-toggle="tab">过滤</a></li>
+            <li id='filterpcap'><a href="#filterpcapdiv" data-toggle="tab">过滤包汇总</a></li>
+        </ul>
+        <div class="tab-pane active" id="filterdiv">
+    选择抓包文件<select id="pcap">
+    	<option></option>
+    	<% if(filesPcap.files!=[]){
+    		for(var i=0;i<filesPcap.files.length;i++){%>
+    		<option value="<%=filesPcap.files[i].ip%>&<%=filesPcap.files[i].path%>&<%=filesPcap.files[i].name%>"><%=filesPcap.files[i].name%></option>
+    		<%}%>
+    	<%}%>
+        </select>
+        <div>
+            <h3>过滤</h3>
+            <hr>
+    	   <div class="choose">
+    	    <span>IP：</span><input id='ip' type="text">
+    	    <select id="filterIp">
+    	    	<option value="src">源ip</option>
+    	    	<option value="dst">目的ip</option>
+    	    	<option value="both">双向</option>
+    	    </select>
+    	   </div>
+    	   <div class="choose">
+    		<span>端口号：</span><input id='port' type="text">
+    		<select id="filterPort">
+    	    	<option value="src">源端口</option>
+    	    	<option value="dst">目的端口</option>
+    	    	<option value="both">双向</option>
+    	    </select>
+    	   </div>
+    	   <div>
+    	       <button id="filter" class="btn btn-primary">过滤</button>
+    	   </div>
+    	</div>
+        <div id="filterRuning">
+        <%if(filesPcap.data[0]){%>
+            <h3>文件提取中...</h3>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <td>文件名</td>
+                        <td>状态</td>
+                        <td>目的主机</td>
+                        <td>文件路径</td>
+                        <td>文件大小(单位：B)</td>
+                        <td>过滤时间</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><%=filesPcap.data[0].name%></td>
+                        <td><span style="color:red">过滤中。。。</span></td>
+                        <td><%=filesPcap.data[0].ip%></td>
+                        <td><%=filesPcap.data[0].path%></td>
+                        <td><%=filesPcap.data[0].size%></td>
+                        <td id="filterRunningctime"><%=filesPcap.data[0].ctime%></td>
+                    </tr>
+                </tbody>
+            </table>
+        <%}%>  
+        </div>
+        </div>
+        <div class="tab-pane" id="filterpcapdiv">
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+var filterStatus;
+if($('#filterRuning').html().trim()){
+    var runningctime=$('#filterRunningctime').html();
+    $('#filterRunningctime').html(getdate(parseInt(runningctime)));
+    $('#filter').attr('disabled',true);
+    var timer1=setTimeout(function(){
+        location.reload();
+    },500);
+}
+$('#filter').click(function(){
+    	var exp="";
+    	var file={};
+    	var pcap=$('#pcap').val();
+    	var ipFormate=true;
+    	var portFormate=true;
+    	if(!pcap){
+    		alert('请选择抓包文件');
+    	}else{
+    		var ip=$('#ip').val();
+    		var filterIp=$('#filterIp').val();
+    			if(ip){
+    				if(!(/^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/).test(ip)){
+    					alert("请输入正确的ip地址");
+    					ipFormate=false;
+    				}else{
+    					switch(filterIp){
+    						case 'src':exp+='ip src '+ip;break;
+    						case 'dst':exp+='ip dst '+ip;break;
+    						case 'both':exp+='ip host '+ip;break;
+    					}
+    				}
+    			}
+    			var port=$('#port').val();
+    			var filterPort=$('#filterPort').val();
+    			if(port){
+    				if(/^[0-9]{1,5}$/.test(port)&&65535>=Number(port)&&Number(port)>=1){
+                        if(exp){exp+=' and ';}
+                        switch(filterPort){
+                            case 'src':exp+='src port '+port;break;
+                            case 'dst':exp+='dst port '+port;break;
+                            case 'both':exp+='port '+port;break;
+                        }
+    				}else{
+    					portFormate=false;
+                        alert("请输入正确的端口号");
+    				}
+    			}
+    			if((ip||port)&&ipFormate&&portFormate){
+    				$.ajax({
+    					url:'/filterPcap',
+    					data:{
+    						pcap:$('#pcap').val(),
+    						exp:exp
+    					},
+    					success:function(data){
+                            // location.reload();
+                            alert(data);
+    					}
+    				})
+    			}
+                if(!(ip||port)){
+    				alert('请添加过滤条件');
+    			}
+    		}
+    	});
+$('#filterpcap').click(function(){
+    $.ajax({
+        url:'/filterPcapAll',
+        success:function(data){
+            if(data[data.length-1]=='filtering'){
+                alert('文件过滤中。。。');
+                filterStatus=data.pop();
+            }
+            console.log(data);
+            renderTable(data);
+        }
+    })
+});
+function renderTable(arr){
+    	$('#filterpcapdiv').html('<h3>过滤包文件</h3>');
+    	$('#filterpcapdiv').append($('<table class="table table-bordered table-striped"></table>').append($('<thead></thead>')));
+    	$('#filterpcapdiv thead').html('<tr><td>文件名</td><td>过滤条件</td><td>目的主机</td><td>文件路径</td><td>文件大小(单位：B)</td><td>过滤时间</td><td>操作</td></tr>');
+    	$('#filterpcapdiv table').append($('<tbody></tbody>'));
+    	for(var i=0;i<arr.length;i++){
+    		var tr=$('<tr></tr>').html('<td>'+arr[i].name+'</td><td>'+filter(arr[i].name)+'</td><td>'+arr[i].ip+'</td><td>'+arr[i].path+'</td><td>'+arr[i].size+'</td><td>'+getdate(arr[i].ctime)+'</td><td><button class="btn btn-danger">删除</button></td>');
+    		$('#filterpcapdiv tbody').append(tr);
+    	}
+    	$('tr button').click(function(event){
+    		var tr=event.target.parentNode.parentNode;
+    		var tds=tr.children;
+      		var deletefile=confirm("确认永久删除抓包文件"+tds[0].innerHTML+"?");
+      		if(deletefile){
+      			
+      			$.ajax({
+      				url:"/fileFilterDelete",
+      				data:{
+      					filename:tds[0].innerHTML,
+      					fileip:tds[2].innerHTML,
+      					filepath:tds[3].innerHTML
+      				},
+      				success:function(data){
+      					if(data==true){
+                            tr.parentNode.removeChild(tr);
+                            alert('删除成功');
+                        }else{
+                            alert('删除失败');
+                        }
+      				}
+      			});
+      		}
+      });
+    }
+    function formate(num){
+    	return num<10?'0'+num:num;
+    }
+    function getdate(time){
+    	var date=new Date(time);
+    	var y=date.getFullYear();
+    	var M=formate(date.getMonth()+1);
+    	var h=formate(date.getHours());
+    	var d=formate(date.getDate());
+    	var m=formate(date.getMinutes());
+    	var s=formate(date.getSeconds());
+    	return y+'年 '+M+'月 '+d+'日 '+h+':'+m+':'+s+'';
+    }
+    function filter(str){
+        var match=/filter_(\w+|.+).pcap/.exec(str);
+        return match[1].replace(/_/g,' ');
+    }
+</script>
+</html>

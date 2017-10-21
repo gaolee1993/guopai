@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国拍</title>
+	<script src="js/jquery.min.js" type="text/javascript"></script>
+	<script src='js/highstock.js'></script>
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+	<link href="css/bootstrap.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/main.css" />
+	<style type="text/css">
+	.tab-content{
+		width:80%;
+	}
+	#captureDiv{
+		width:150px;
+		margin: 20px auto;
+	}
+	#captureImg{
+		width: 100%;
+	}
+	</style>
+</head>
+<body>
+    <div class="banner">
+		<p class="">流量记录系统</p>
+	</div>
+    <div class="tab-container">
+        <ul class="nav nav-pills nav-stacked">
+            <li><a href="/device">设备信息</a></li>
+            <li class="active"><a href="#">抓包系统</a></li>
+            <li><a href="/pcapfile">文件管理</a></li>
+            <li><a href="/filter">数据包提取</a></li>
+            <li><a href="/analysefile">文件分析</a></li>
+            <li><a href="/log">日志</a></li>
+        </ul>
+    </div>
+    <div class="tab-content">
+            <%  if(deviceInfo){%>
+                <span>设备磁盘利用率分别为</span>
+                    <%for(var i=0;i<deviceInfo.length;i++){%>
+                            <span style="color:red;font-weight:bold">&nbsp;&nbsp;<%=deviceInfo[i]%>%</span>
+                    <%}%>
+                <span>请及时清理磁盘</span>
+                <%}%>
+            <div id="captureDiv">
+            	<button type="button" class="btn btn-primary" disabled>启动</button>
+            	<button type="button" class="btn btn-danger" disabled>停止</button>
+            </div>
+            <div id="captureImg1"></div>
+            <div id="captureImg2"></div>
+    </div>
+    <script type="text/javascript">
+        var timer1=timer2=null;
+        var chart;
+        var btn='<%=btnNext%>';
+        btn=='stop'?$('#captureDiv button:nth-child(1)').removeAttr('disabled'):$('#captureDiv button:nth-child(2)').removeAttr('disabled');
+        //根据后台数据每次刷新页面后更新数组
+        var capture={
+            host1:{},
+            host2:{}
+        };
+		timer1=setInterval(function(){
+				$.ajax({
+					url:'/captureData',
+					cache:false,
+					success:function(data){
+						capture=data;
+                        console.log(capture);
+					}
+				})
+		},4000);
+
+Highcharts.setOptions({
+    	global:{
+    		useUTC:false
+    	}
+    });
+$('#captureImg1').highcharts('StockChart', {
+	chart: {        
+			events: {                                                   
+				load: function(){													
+                    var series=[];
+                    for(var i=0;i<this.series.length;i++){
+                        series[i]=this.series[i];
+                    }
+                    //自动匹配网卡的名字
+                    timer2=setInterval(function(){
+                        for(var j=0;j<series.length;j++){
+                            series[j].setData(capture.host1[series[j].name]);
+                        }
+                    },4000);                                                 
+				}                                                               
+			}                                                                   
+		},
+    rangeSelector : {
+        enabled:false
+    },
+    title : {
+    	text : '主机10.10.124.228流量速率'
+    },
+    legend: {
+        enabled: true                                             
+	},
+	yAxis: {  
+		title: {   
+			text: '抓包速率--bps'                          
+		},       
+		tickInterval:150                  
+	},
+	credits:{
+		enabled:false
+	},
+        series:[{
+        name:'line1(em1)',
+        data:[[(new Date()).getTime(),0]]
+    },
+    {
+        name:'line_LB(em3)',
+        data:[[(new Date()).getTime(),0]]
+    },
+    {
+
+        name:'line2(p5p2)',
+        data:[[(new Date()).getTime(),0]]
+    }]
+});
+
+$('#captureImg2').highcharts('StockChart', {
+    chart: {        
+            events: {                                                   
+                load: function(){                                                   
+                    // set up the updating of the chart each second             
+                    // var series = this.series[0];
+                    // timer2=setInterval(function() {                     
+                    //  series.setData(capture.line1.em1);  
+                    // }, 4000);
+                    var series=[];
+                    for(var i=0;i<this.series.length;i++){
+                        series[i]=this.series[i];
+                    }
+                    //自动匹配网卡的名字
+                    timer2=setInterval(function(){
+                        for(var j=0;j<series.length;j++){
+                            series[j].setData(capture.host2[series[j].name]);
+                        }
+                    },4000);                                                 
+                }                                                               
+            }                                                                   
+        },
+    rangeSelector : {
+        enabled:false
+    },
+    title : {
+        text : '主机10.10.124.229流量速率'
+    },
+    legend: {
+        enabled: true                                             
+    },
+    yAxis: {  
+        title: {   
+            text: '抓包速率--bps'                          
+        },       
+        tickInterval:150                  
+    },
+    credits:{
+        enabled:false
+    },
+        series:[{
+        name:'line3(em1)',
+        data:[[(new Date()).getTime(),0]]
+    },
+    {
+        name:'line4(em3)',
+        data:[[(new Date()).getTime(),0]]
+    },
+    {
+
+        name:'line5(p5p2)',
+        data:[[(new Date()).getTime(),0]]
+    }]
+});
+
+
+
+    $('#captureDiv button:first-child').click(function(){
+    	$.ajax({
+    		url:'/captureStart',
+    		data:{
+    			message:"start"
+    		},
+    		success:function(data){
+                $('#captureDiv button:nth-child(2)').removeAttr('disabled');
+                $('#captureDiv button:first-child').attr('disabled',true);
+                alert(data);
+            }
+    	});
+        clearInterval(timer1);
+        timer1=setInterval(function(){
+            $.ajax({
+                url:'/captureData',
+                cache:false,
+                success:function(data){
+                    capture=data;
+                    console.log(capture);
+                    }
+                })
+            },3000);
+    	});                    
+    $('#captureDiv button:nth-child(2)').click(function(){
+        var stop=confirm('停止抓包？');
+        if(stop){
+    	   $('#captureDiv button:first-child').removeAttr('disabled');
+    	   $('#captureDiv button:nth-child(2)').attr('disabled',true);
+    	   $.ajax({
+    		  url:'/captureStop',
+    		  data:{
+    			 message:"stop"
+    		  },
+    		  success:function(data){
+    			alert(data);
+    			clearInterval(timer1);
+    		  }
+    	   })
+        }
+    });
+    </script>
+</body>
+</html>
